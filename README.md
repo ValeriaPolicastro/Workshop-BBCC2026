@@ -25,18 +25,21 @@ Required packages and software installation list:
 
 Open R\Rstudio and run the code highlighted
 
-* Devools, Remotes R build tools
+* R build tools
  ```
 install.packages("rmarkdown")
+
+```
+* Robin
+ ```
 install.packages("robin")
 install.packages("BiocManager")
 BiocManager::install("BiocParallel")
 ```
+
 * Seurat
 ```
 install.packages("Seurat")
-devtools::install_github('satijalab/seurat-data')
-remotes::install_github('satijalab/seurat-wrappers')
  ```
 
 
