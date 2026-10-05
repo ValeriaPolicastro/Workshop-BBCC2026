@@ -46,6 +46,9 @@ install.packages("Seurat")
 
 
 ### Workshop Info:
+
+* https://www.bbcc-meetings.it/bbcc2026/bbcc2026-program-and-venue/
+  
 Date:
 October 21st, 9:00-13:00. The venue will be communicated to participants via email.
 
