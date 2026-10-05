@@ -5,7 +5,7 @@ This repository contains instructions and materials for the workshop
 We will follow 2 pipelines. Please download the files:
 
 
-* [Seurat Pipeline (rmd format)](link.md)
+* [Single cell Pipeline (rmd format)](link.md)
 * [Patient network Pipeline (rmd format)](link.md)
 
 
