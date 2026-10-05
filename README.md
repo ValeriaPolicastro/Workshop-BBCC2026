@@ -29,7 +29,6 @@ Open R\Rstudio and run the code highlighted
 * R build tools
  ```
 install.packages("rmarkdown")
-
 ```
 * Robin
  ```
