@@ -2,15 +2,16 @@
 This repository contains instructions and materials for the workshop
 
 ## Pipelines
-We will follow 2 pipelines:
+We will follow 2 pipelines. Please download the files:
 
-* Single cell ...
-* Expression ...
+
+* [Seurat Pipeline (rmd format)](link.md)
+* [Patient network Pipeline (rmd format)](link.md)
 
 
 ## Data Availability
 Please download the following folder:
-* [Datasets Drive Folder]
+* [Datasets Folder]
 
 
 ## Sofware prerequisites
