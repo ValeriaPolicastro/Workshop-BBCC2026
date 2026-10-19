@@ -26,19 +26,19 @@ Required packages and software installation list:
 
 Open R\Rstudio and run the code highlighted
 
-* R build tools
+
  ```
 install.packages("rmarkdown")
-```
-* Robin
- ```
+install.packages("dplyr")
+install.packages("igraph")
+install.packages("lsa")
+
+
+
 install.packages("robin")
 install.packages("BiocManager")
 BiocManager::install("BiocParallel")
-```
 
-* Seurat
-```
 install.packages("Seurat")
  ```
 
