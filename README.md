@@ -32,8 +32,7 @@ install.packages("rmarkdown")
 install.packages("dplyr")
 install.packages("igraph")
 install.packages("lsa")
-
-
+install.packages("ggplot2")
 
 install.packages("robin")
 install.packages("BiocManager")
