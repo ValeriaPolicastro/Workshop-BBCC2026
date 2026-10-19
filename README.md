@@ -6,7 +6,8 @@ We will follow 2 pipelines. Please download the files:
 
 
 * [Single cell Pipeline (rmd format)](link.md)
-* [RNA-seq network Pipeline (qmd format)](network_from_rnaseq.qmd) [RNA-seq network Pipeline (html format)](rna_network_bbcc-dellagata.html)
+* [RNA-seq network Pipeline (qmd format)](network_from_rnaseq.qmd)
+* [RNA-seq network Pipeline (html format)](rna_network_bbcc_dellagatta.html)
 
 
 ## Data Availability
