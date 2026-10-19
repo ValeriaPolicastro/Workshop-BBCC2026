@@ -50,7 +50,7 @@ install.packages("Seurat")
 * https://www.bbcc-meetings.it/bbcc2026/bbcc2026-program-and-venue/
   
 Date:
-October 21st, 9:00-13:00. The venue will be communicated to participants via email.
+October 21st, 9:00-13:00.
 
 *Instructors: Annamaria Carissimo, Senior Researcher, Istituto per le Applicazione del Calcolo “M.Picone”, National Research Council of Italy, Naples, Italy; and Valeria Policastro, Junior Assistant Professor Department of Political Science, University of Naples ”Federico II”, Naples, Italy.*
 
