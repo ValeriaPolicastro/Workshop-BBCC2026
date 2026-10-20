@@ -6,13 +6,13 @@ We will follow 2 pipelines. Please download the files:
 
 
 * [Single cell Pipeline (rmd format)](link.md)
-* [RNA-seq network Pipeline (qmd format)](network_from_rnaseq.qmd)
+* [RNA-seq network Pipeline (qmd format)](network_from_rnaseq_bbcc_tutorial.qmd)
 
 
 ## Data Availability
 Please download the following folder:
 * [Datasets Folder]
-* [RNA-seq network Pipeline (html format)](rna_network_bbcc_dellagatta.html)
+* [RNA-seq network Pipeline (html format)](network_from_rnaseq_bbcc_tutorial.html)
 
 
 ## Sofware prerequisites
