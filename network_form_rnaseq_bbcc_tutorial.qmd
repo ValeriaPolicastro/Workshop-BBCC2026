@@ -1,0 +1,528 @@
+---
+title: "Biological Network from RNA-Sequencing"
+author: "Vincenzo della Gatta"
+date: today
+
+format:
+  html:
+    theme: [cosmo, file.scss]
+    embed-resources: true
+    self-contained-math: true
+    code-fold: true
+    code-summary: "Show code"
+    toc: true
+    toc-location: left
+
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## Data download from Linked Omics
+<span style="color:#B22222;"><strong>Liver</strong></span> cancer RNA-Seq data
+```{r}
+#data_rna10 <- TCGAbiolinks::getLinkedOmicsData(project = "TCGA-LIHC", dataset = "RNAseq (HiSeq, Gene level)")
+
+#saveRDS(data_rna10, "Liver_rna.rds")
+
+data_rna = readRDS("Liver_rna.rds")
+```
+
+### Dataset
+```{r}
+head(data_rna[,1:7])
+```
+
+## Data pre-processing
+<span style="color:#B22222;"><strong>Genes</strong></span> with a <span style="color:#B22222;"><strong>mean expression</strong></span> ≥ 10 were retained, and the <span style="color:#B22222;"><strong>top 15%</strong></span> with the highest coefficient of variation (CV) were selected.
+
+### Selection of expressed genes
+Selection of patient columns:
+```{r, message=FALSE, warning= FALSE}
+library(dplyr)
+
+rna_samples <- data_rna %>%
+  select(-attrib_name)
+```
+
+Calculate mean expression for each gene:
+```{r}
+mean_expression <- rowMeans(rna_samples, na.rm = TRUE)
+```
+
+Remotion of genes with mean expression $<$ 10
+```{r}
+rna_mean_filtered <- data_rna[mean_expression >= 10, ]
+
+rna_samples_filtered <- rna_samples[mean_expression >= 10, ]
+```
+
+
+### Selection of most variable genes
+Selection of most informative genes across all the patients.
+
+- Use of `Coefficient of Variation`
+```{r}
+#Calculate the coefficient of variation (CV)
+gene_mean <- rowMeans(rna_samples_filtered, na.rm = TRUE)
+
+gene_sd <- apply(
+  rna_samples_filtered,
+  1,
+  sd,
+  na.rm = TRUE
+)
+
+cv <- gene_sd / gene_mean
+```
+
+Rank genes from highest to lowest CV:
+```{r}
+gene_order <- order(
+  cv,
+  decreasing = TRUE,
+  na.last = NA)
+```
+
+Keep the top 20% most variable genes
+```{r}
+n_top <- ceiling(length(gene_order) * 0.20)
+
+selected_genes <- head(gene_order, n_top)
+
+rna_filtered <- rna_mean_filtered[selected_genes, ]
+```
+
+## Network construction
+The <span style="color:#B22222;"><strong>RNA network</strong></span> was constructed using <span style="color:#B22222;"><strong>Pearson correlation</strong></span>:
+
+- <span style="color:#B22222;"><strong>Nodes:</strong></span> patients  
+- <span style="color:#B22222;"><strong>Edges:</strong></span> pairwise similarity  
+- <span style="color:#B22222;"><strong>Threshold:</strong></span> only the <span style="color:#B22222;"><strong>top 15%</strong></span> of similarities were retained  
+
+
+### Similarity of patient
+Compute Pearson correlation between patients
+
+- Use of the `cor()` function
+```{r}
+library(igraph)
+
+rna_data <- rna_filtered[, 2:372]
+
+rna_similarity <- cor(
+  rna_data,
+  method = "pearson")
+
+diag(rna_similarity) <- 0 #no self loops
+
+```
+
+### Creation of edgelist
+
+We can select the lower triangle of the similarity matrix, beacause correlation is simmetric. We don't consider the diagonal, because of self loops.
+
+```{r}
+edge_index <- which(
+  lower.tri(rna_similarity, diag = FALSE),
+  arr.ind = TRUE)
+
+head(edge_index)
+
+
+#lower.tri() returns TRUE for those located below the main diagonal.
+
+#which() finds all cells that contain TRUE, and arr.ind = TRUE returns two numbers: the row and the column.
+
+#In this way we have a matrix that tells you where to retrieve the values corresponding to the pairs.
+```
+
+Construction of a dataframe that contains the pairs similarity:
+```{r}
+rna_all_edges <- data.frame(
+  from = colnames(rna_similarity)[edge_index[, 1]],
+  to = colnames(rna_similarity)[edge_index[, 2]],
+  weight = rna_similarity[edge_index])
+#in this way we can have dataframe that has an edgelist form
+```
+
+
+We don't want a complete graph. We define a <span style="color:#B22222;"><strong>**similarity threshold**:</strong></span> patients, below which the edge weight is set to **0**.
+
+- The 85th quantile is selected with `quantile()` function.
+```{r}
+similarities <- rna_similarity[lower.tri(rna_similarity)]
+
+threshold <- quantile(
+  similarities,
+  0.85,
+  na.rm = TRUE
+)
+
+```
+
+Keep only similarities above the threshold.
+
+- Similarities under the threshold are forced to 0.
+```{r}
+rna_adjacency <- rna_similarity
+
+rna_adjacency[rna_adjacency < threshold] <- 0 
+
+diag(rna_adjacency) <- 0
+```
+
+Weighted RNA network with 'igraph'.
+```{r}
+rna_graph <- graph_from_adjacency_matrix(
+  rna_adjacency,
+  mode = "upper",
+  diag = FALSE,
+  weighted = TRUE
+)
+
+rna_graph <- delete_edges(
+  rna_graph,
+  E(rna_graph)[E(rna_graph)$weight == 0])
+```
+
+### Graph edge weights distribution
+We can build a histogram of the edge weights starting from an igraph object.
+```{r}
+library(ggplot2)
+ggplot(
+  data.frame(weight = E(rna_graph)$weight),
+  aes(x = weight)
+) +
+  geom_histogram(bins = 100, fill = "steelblue", color = "white") +
+  labs(
+    x = "Edge weight",
+    y = "Frequency",
+    title = "Distribution of RNA edge weights"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+
+## Comparison of the network communities
+The robustness of the <span style="color:#B22222;"><strong>RNA network</strong></span> was evaluated by comparing <span style="color:#B22222;"><strong>Fast Greedy</strong></span> and <span style="color:#B22222;"><strong>Louvain</strong></span> community detection algorithms using `robinCompare()` from the <span style="color:#B22222;"><strong>robin</strong></span> package.
+
+- At increasing levels of graph perturbation, communities are detected and compared with those of the original unperturbed graph, generating a robustness curve.
+```{r, message=FALSE}
+library(robin)
+
+graph = rna_graph
+
+comparison = robinCompare(graph=graph, method1="walktrap", method2="louvain")   
+```
+
+### Plot of the comparison
+Louvain communities are more stable, becasuse its curve has a lower VI index. VI quantifies the differences between the community structures detected by the same method on the original and perturbed graphs, with lower values indicating greater stability.
+```{r}
+plot(comparison)
+```
+
+
+## Robustness of the network communities
+
+Are <span style="color:#B22222;"><strong>Louvain communities</strong></span> more robust than the <span style="color:#B22222;"><strong>null model</strong></span>?
+
+Creation of the null model
+```{r}
+
+graphRandom <- robin::random(
+  graph = graph,
+  dist = "Other"
+)
+
+```
+
+Comparison between null model and Louvain model
+```{r}
+robust <- robinRobust(graph=graph, graphRandom=graphRandom, method="louvain") 
+```
+
+Plot of the comparison:
+
+- Louvain communities are better.
+```{r}
+plot(robust)
+```
+
+# Alternative Graph construction
+We can use <span style="color:#B22222;"><strong>Cosine similarity</strong></span> to build an adjacency matrix.
+```{r, warning=FALSE}
+library(lsa)
+
+rna_data <- rna_filtered[, 2:372]
+
+rna_cosine_similarity <- lsa::cosine(
+  as.matrix(rna_data)
+)
+
+diag(rna_cosine_similarity) <- 0 # No self-loops
+```
+
+## Creation od edgelist
+```{r}
+edge_index_cosine <- which(
+  lower.tri(rna_cosine_similarity, diag = FALSE),
+  arr.ind = TRUE
+)
+
+rna_cosine_all_edges <- data.frame(
+  from = colnames(rna_cosine_similarity)[edge_index_cosine[, 1]],
+  to = colnames(rna_cosine_similarity)[edge_index_cosine[, 2]],
+  weight = rna_cosine_similarity[edge_index_cosine]
+)
+
+head(rna_cosine_all_edges)
+```
+
+## Similarity threshold
+```{r}
+cosine_similarities <- rna_cosine_similarity[
+  lower.tri(rna_cosine_similarity)
+]
+
+threshold_cosine <- quantile(
+  cosine_similarities,
+  0.85,
+  na.rm = TRUE
+)
+
+```
+
+Keep only similarities above the threshold.
+```{r}
+rna_cosine_adjacency <- rna_cosine_similarity
+
+rna_cosine_adjacency[
+  rna_cosine_adjacency < threshold_cosine
+] <- 0
+
+diag(rna_cosine_adjacency) <- 0
+```
+
+Graph construction:
+```{r}
+rna_cosine_graph <- graph_from_adjacency_matrix(
+  rna_cosine_adjacency,
+  mode = "upper",
+  diag = FALSE,
+  weighted = TRUE
+)
+
+rna_cosine_graph <- delete_edges(
+  rna_cosine_graph,
+  E(rna_cosine_graph)[E(rna_cosine_graph)$weight == 0]
+)
+```
+
+# Distribution comparison
+```{r}
+#Edge weights
+df_weights <- rbind(
+  data.frame(
+    Weight = E(rna_graph)$weight,
+    Method = "Pearson"
+  ),
+  data.frame(
+    Weight = E(rna_cosine_graph)$weight,
+    Method = "Cosine"
+  )
+)
+
+#Density plots
+ggplot(df_weights, aes(x = Weight, fill = Method)) +
+  geom_histogram() +
+  facet_wrap(~ Method, nrow = 1) +
+  scale_fill_manual(values = c(
+    "Pearson" = "#377EB8",
+    "Cosine" = "#E69F00"
+  )) +
+  labs(
+    x = "Edge weight",
+    y = "Density",
+    title = "Distribution of edge weights"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold"),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+# A different network analysis
+We can build a gene network, starting from the same dataset.
+
+- <span style="color:#B22222;"><strong>Nodes:</strong></span> genes  
+- <span style="color:#B22222;"><strong>Edges:</strong></span> pairwise similarity across the patients 
+- <span style="color:#B22222;"><strong>Threshold:</strong></span> only the <span style="color:#B22222;"><strong>top 15%</strong></span> of similarities were retained  
+
+```{r, warning=FALSE}
+set.seed(123)
+n_genes <- nrow(data_rna)
+selected_indices <- sample(1:n_genes, 500)
+rna_sample <- data_rna[selected_indices, ]
+
+gene_names <- as.character(rna_sample$attrib_name)
+rna_sample <- as.matrix(rna_sample[, -1])
+rownames(rna_sample) <- gene_names
+```
+
+## Pearson correlation between genes
+We need genes as columns of the dataset, beacause `cor()` computes correlations between columns. 
+
+- `t()` transpose the matrix.
+```{r}
+rna_similarity <- cor(t(rna_sample))
+diag(rna_similarity) <- 0
+```
+
+Using the same functions as in the previous steps, we can construct a gene similarity network.
+```{r}
+# Edge indices
+edge_index <- which(
+  lower.tri(rna_similarity, diag = FALSE),
+  arr.ind = TRUE
+)
+
+# Edge list
+rna_all_edges <- data.frame(
+  from = rownames(rna_sample)[edge_index[, 1]],
+  to = rownames(rna_sample)[edge_index[, 2]],
+  weight = rna_similarity[edge_index]
+)
+```
+
+# 85th percentile threshold
+```{r}
+threshold <- quantile(
+  rna_similarity[lower.tri(rna_similarity)],
+  0.85,
+  na.rm = TRUE
+)
+
+rna_adjacency <- rna_similarity
+rna_adjacency[rna_adjacency < threshold] <- 0
+diag(rna_adjacency) <- 0
+```
+
+
+# Weighted graph
+```{r}
+rna_graph <- graph_from_adjacency_matrix(
+  rna_adjacency,
+  mode = "upper",
+  diag = FALSE,
+  weighted = TRUE
+)
+
+rna_graph
+```
+
+## Network characteristics
+
+Number of nodes and edges:
+```{r}
+vcount(rna_graph)
+
+ecount(rna_graph)
+```
+
+Network density:
+```{r}
+edge_density(rna_graph)
+```
+
+Global clustering coefficient:
+```{r}
+transitivity(rna_graph, type = "global")
+```
+
+Number of isolated nodes:
+```{r}
+sum(degree(rna_graph) == 0)
+```
+
+## Node charactestistics
+
+Node degree:
+```{r}
+node_degree <- degree(rna_graph)
+```
+
+Betweenness centrality:
+```{r}
+node_betweenness <- betweenness(
+  rna_graph,
+  directed = FALSE,
+  weights = NA
+)
+```
+
+Closeness centrality
+```{r}
+node_closeness <- closeness(
+  rna_graph,
+  mode = "all",
+  weights = NA,
+  normalized = TRUE
+)
+```
+
+Hub centrality
+```{r}
+node_hub <- hub_score(
+  rna_graph,
+  weights = NA
+)$vector
+
+```
+
+
+We can build a dataframe:
+```{r}
+node_metrics <- data.frame(
+  Gene = rownames(rna_sample),
+  Degree = node_degree,
+  Betweenness = node_betweenness,
+  Closeness = node_closeness, 
+  Hub_Centrality = node_hub
+)
+
+head(node_metrics)
+```
+
+## Edge characteristics
+
+Edge betweenness centrality:
+```{r}
+edge_betweenness_values <- edge_betweenness(
+  rna_graph,
+  directed = FALSE,
+  weights = NA
+)
+```
+
+Edge weights:
+```{r}
+edge_weights <- E(rna_graph)$weight
+```
+
+We can build a second dataframe:
+```{r}
+edge_list <- as_data_frame(rna_graph, what = "edges")
+
+edge_metrics <- data.frame(
+  Gene_1 = edge_list$from,
+  Gene_2 = edge_list$to,
+  Weight = edge_weights,
+  Edge_Betweenness = edge_betweenness_values
+)
+
+head(edge_metrics)
+```
