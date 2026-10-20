@@ -12,7 +12,7 @@ We will follow 2 pipelines. Please download the files:
 ## Data Availability
 Please download the following folder:
 * [Datasets Folder]
-* [RNA-seq network Pipeline (html format)](network_from_rnaseq_bbcc_tutorial.html)
+* [RNA-seq network Pipeline (html format)](graph_from_rnaseq_bbcc_tutorial.html)
 
 
 ## Sofware prerequisites
