@@ -5,7 +5,7 @@ This repository contains instructions and materials for the workshop
 We will follow 2 pipelines. Please download the files:
 
 
-* [Single cell Pipeline (rmd format)](link.md)
+* [Single-cell RNA Pipeline (qmd format)](singlecell_robin_tutorial_bbcc.qmd)
 * [RNA-seq network Pipeline (qmd format)](network_from_rnaseq_bbcc_tutorial.qmd)
 
 
@@ -13,6 +13,11 @@ We will follow 2 pipelines. Please download the files:
 Please download the following folder:
 * [Datasets Folder]
 * [RNA-seq network Pipeline (html format)](graph_from_rnaseq_bbcc_tutorial.html)
+* [Single-cell RNA Pipeline (html format)](singlecell_robin_tutorial_bbcc.html)
+* [Single-cell PBMC dataset — filtered count matrix (.h5)](https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5)
+
+Place the downloaded `.h5` file in the same folder as
+`singlecell_robin_tutorial.qmd`, keeping its original filename.
 
 
 ## Sofware prerequisites
@@ -34,12 +39,17 @@ install.packages("dplyr")
 install.packages("igraph")
 install.packages("lsa")
 install.packages("ggplot2")
-
+install.packages("knitr")
+install.packages("patchwork")
+install.packages("hdf5r")
 install.packages("robin")
 install.packages("BiocManager")
-BiocManager::install("BiocParallel")
-
 install.packages("Seurat")
+
+BiocManager::install("BiocParallel")
+BiocManager::install("SingleCellExperiment")
+BiocManager::install("scDblFinder")
+
  ```
 
 
