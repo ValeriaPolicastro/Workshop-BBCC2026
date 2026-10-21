@@ -50,6 +50,10 @@ BiocManager::install("SingleCellExperiment")
 BiocManager::install("scDblFinder")
 
  ```
+### Papers: 
+* Valeria Policastro, Dario Righelli, Luisa Cutillo, Annamaria Carissimo, robin2: accelerating single-cell data clustering evaluation, Bioinformatics Advances, Volume 5, Issue 1, (2025) https://doi.org/10.1093/bioadv/vbaf184 
+* Policastro V. et al. ROBustness In Network (robin): an R package for Comparison and Validation of communities. The R Journal (2021). 
+* Carissimo A., Cutillo L., De Feis I., Validation of community robustness Computational Statistics and Data Analysis (2017)
 
 
 
