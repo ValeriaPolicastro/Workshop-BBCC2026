@@ -6,12 +6,12 @@ We will follow 2 pipelines. Please download the files:
 
 
 * [Single-cell RNA Pipeline (qmd format)](singlecell_robin_tutorial_unweighted_bbcc.qmd)
-* [RNA-seq network Pipeline (qmd format)](network_from_rnaseq_bbcc_tutorial.qmd)
+* [RNA-seq network Pipeline (qmd format)](tutorial_network_bbcc_21october.qmd)
 
 
 ## Data Availability
 Please download the following folder:
-* [RNA-seq network Pipeline (html format)](graph_from_rnaseq_bbcc_tutorial.html)
+* [RNA-seq network Pipeline (html format)](tutorial_network_bbcc_21october.html)
 * [Single-cell RNA Pipeline (html format)](singlecell_robin_tutorial_unweighted_bbcc.html)
 * [Single-cell PBMC dataset — filtered count matrix (.h5)](https://cf.10xgenomics.com/samples/cell-arc/2.0.0/pbmc_granulocyte_sorted_3k/pbmc_granulocyte_sorted_3k_filtered_feature_bc_matrix.h5)
 
